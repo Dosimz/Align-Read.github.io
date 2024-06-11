@@ -1,3 +1,17 @@
+:root {
+    --color--white: #FFFFFF; /* 纯白色 */
+    --color--gray-dark: #4F4F4F; /* 淡灰色 */
+    --color--gray: #7F8C8D; /* 灰色 */
+    --color--gray-light: #BDC3C7; /* 浅灰色 */
+    --color--shadow: rgba(79, 79, 79, 0.5); /* 淡灰色阴影 */
+    --color--tooltip: #7F8C8D; /* 灰蓝色 */
+    --color--blue-lighter: #EAF2F8; /* 非常浅的蓝色 */
+}
+
+
+
+
+
 aside {
 	flex-shrink: 0;
 	width: 0;

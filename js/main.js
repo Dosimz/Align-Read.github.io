@@ -61,6 +61,7 @@ class UI {
 
 		// title metadata
 		var titleMeta = metadata.filter(meta => meta === '文件標題').concat(['檔名'])
+			// var titleMeta = metadata.filter(meta => meta === '文件標題').concat(['檔名'])
 
 		// record corpus name - unique corpus id as corpus name
 		this.corporaRecord[name] = (name in this.corporaRecord) ?this.corporaRecord[name]+1 :0;

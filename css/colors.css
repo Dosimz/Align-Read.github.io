@@ -1,21 +1,21 @@
 :root {
-  /* gray */
-  --color--black: #000000;
-  --color--gray-darker: #49525A; /* navbar */
-  --color--gray-dark: #5C6770; /* aside */
-  --color--gray: #717B84; /* aside hover & content */
-  --color--gray-light: #889096; /* aside content hover & border */
-  --color--gray-lighter: #e8e8e8; /* explain */
-  --color--white: #ffffff;
+  /* 古籍风格的颜色，但更加明亮 */
+  --color--black: #504A45; /* 浅深褐色 */
+  --color--gray-darker: #7C7267; /* 中棕色，用于导航栏 */
+  --color--gray-dark: #9E8E81; /* 浅棕色，用于侧边栏 */
+  --color--gray: #BAA9A0; /* 更浅的棕色，用于侧边栏悬停和内容 */
+  --color--gray-light: #D3C2B2; /* 浅小麦色，用于侧边栏内容悬停和边框 */
+  --color--gray-lighter: #EDE3D7; /* 浅米色，用于说明部分 */
+  --color--white: #FFF9F0; /* 亚麻色，更亮，替代白色以更符合古色古香的感觉 */
 
-  /* blue - main visual */
-  --color--blue-darker: #4F667D; /* bg & title hover */
-  --color--blue-dark: #667E95; /* title & meta border*/
-  --color--blue: #CAD7E3; /* meta */
-  --color--blue-light: #DFE7EE; /* text hover */
-  --color--blue-lighter: #EFF3F7; /* text & dir hover */
+  /* 主视觉颜色，同样稍作调亮 */
+  --color--blue-darker: #627B6D; /* 淡蓝绿色，用于背景和标题悬停 */
+  --color--blue-dark: #809E91; /* 浅蓝绿色，用于标题和元数据边框 */
+  --color--blue: #B2C8BB; /* 更浅的蓝绿色，用于元数据 */
+  --color--blue-light: #CCDAD6; /* 浅浅的蓝绿色，用于文本悬停 */
+  --color--blue-lighter: #E6F1EE; /* 最浅的蓝绿色，用于更浅的文本和目录悬停 */
 
-  /* transparent */
-  --color--shadow: #00000080;
-  --color--tooltip: #000000C0;
+  /* 透明度 */
+  --color--shadow: rgba(124, 114, 103, 0.5); /* 浅棕色阴影 */
+  --color--tooltip: rgba(124, 114, 103, 0.75); /* 浅棕色提示 */
 }
