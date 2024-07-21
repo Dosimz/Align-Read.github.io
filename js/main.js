@@ -1,349 +1,203 @@
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-	This file defined main functions of Align Reading tool.	
- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+// Selectors
+
+const toDoInput = document.querySelector('.todo-input');
+const toDoBtn = document.querySelector('.todo-btn');
+const toDoList = document.querySelector('.todo-list');
+const standardTheme = document.querySelector('.standard-theme');
+const lightTheme = document.querySelector('.light-theme');
+const darkerTheme = document.querySelector('.darker-theme');
 
 
-// controller of the whole ui
-class UI {
+// Event Listeners
 
-	// corporaRecord: object, count number of each corpus name, used to generate unique corpus id [corpusname: number(int)]
-	constructor() {
-		this.corporaRecord = {};
-		
-		// UI
-		this.mainUI = new Main();										// ui-main.js
-		this.manageUI = new Manage(this);								// ui-aside.js
-		this.metaSettingUI = new Setting(this, '#meta-setting');		// ui-aside.js
-		this.alignSettingUI = new Setting(this, '#align-setting');		// ui-aside.js
-		this.titleSettingUI = new Setting(this, '#title-setting');		// ui-aside.js
-	}
+toDoBtn.addEventListener('click', addToDo);
+toDoList.addEventListener('click', deletecheck);
+document.addEventListener("DOMContentLoaded", getTodos);
+standardTheme.addEventListener('click', () => changeTheme('standard'));
+lightTheme.addEventListener('click', () => changeTheme('light'));
+darkerTheme.addEventListener('click', () => changeTheme('darker'));
 
-	// * * * * * * * * * * * * * * * * data * * * * * * * * * * * * * * * * *
+// Check if one theme has been set previously and apply it (or std theme if not found):
+let savedTheme = localStorage.getItem('savedTheme');
+savedTheme === null ?
+    changeTheme('standard')
+    : changeTheme(localStorage.getItem('savedTheme'));
 
-	// add a new corpus to system
-	// name: string, name of added corpus
-	addCorpus(name) {
-		this.manageUI.addCorpus(name);
-		this.mainUI.addCorpus(name);
-	}
+// Functions;
+function addToDo(event) {
+    // Prevents form from submitting / Prevents form from relaoding;
+    event.preventDefault();
 
-	// set data of corpus
-	// name: string, name of target corpus
-	// data: array(Document-docuxmlParser.js), documents of parsed xml
-	setCorpusData(name, data) {
-		var metadata = [];
-		var aligntype = [];
+    // toDo DIV;
+    const toDoDiv = document.createElement("div");
+    toDoDiv.classList.add('todo', `${savedTheme}-todo`);
 
-		// extract data from each document
-		data.forEach(docObj => {
+    // Create LI
+    const newToDo = document.createElement('li');
+    if (toDoInput.value === '') {
+            alert("You must write something!");
+        } 
+    else {
+        // newToDo.innerText = "hey";
+        newToDo.innerText = toDoInput.value;
+        newToDo.classList.add('todo-item');
+        toDoDiv.appendChild(newToDo);
 
-			// system defined
-			docObj.metadata.forEach(entry => {
-				let metaname = entry.zhname;
-				if (metadata.indexOf(metaname) < 0) metadata.push(metaname);
-			});
+        // Adding to local storage;
+        savelocal(toDoInput.value);
 
-			// user defined
-			docObj.udefmetadata.forEach(entry => {
-				let metaname = entry.name;
-				if (metadata.indexOf(metaname) < 0) metadata.push(metaname);
-			});
+        // check btn;
+        const checked = document.createElement('button');
+        checked.innerHTML = '<i class="fas fa-check"></i>';
+        checked.classList.add('check-btn', `${savedTheme}-button`);
+        toDoDiv.appendChild(checked);
+        // delete btn;
+        const deleted = document.createElement('button');
+        deleted.innerHTML = '<i class="fas fa-trash"></i>';
+        deleted.classList.add('delete-btn', `${savedTheme}-button`);
+        toDoDiv.appendChild(deleted);
 
-			// align tag
-			$(docObj.content).find('AlignBegin').each(function() {
-				let type = $(this).attr('Type');
-				if (aligntype.indexOf(type) < 0) aligntype.push(type);
-			});
-		});
+        // Append to list;
+        toDoList.appendChild(toDoDiv);
 
-		// default align type
-		aligntype.push('FullText');
+        // CLearing the input;
+        toDoInput.value = '';
+    }
 
-		// title metadata
-		var titleMeta = metadata.filter(meta => meta === '文件標題').concat(['檔名'])
-			// var titleMeta = metadata.filter(meta => meta === '文件標題').concat(['檔名'])
+}   
 
-		// record corpus name - unique corpus id as corpus name
-		this.corporaRecord[name] = (name in this.corporaRecord) ?this.corporaRecord[name]+1 :0;
-		var suffix = (this.corporaRecord[name] > 0) ?`(${ this.corporaRecord[name] })` :'';
-		name += suffix;
 
-		// sub UI
-		this.metaSettingUI.addItems(metadata, name);
-		this.alignSettingUI.addItems(aligntype, name);
-		this.titleSettingUI.addItems(titleMeta, name);
-		this.mainUI.setCorpusData(name, data, aligntype, {
-			metadata: this.metaSettingUI.target,
-			aligntype: this.alignSettingUI.target,
-			titleDisplay: this.titleSettingUI.target,
-		});
-	}
+function deletecheck(event){
 
-	// delete a corpus from system
-	// name: string, name of deleted corpus
-	deleteCorpus(name) {
-		this.corporaRecord[name.replace(/\([0-9]+\)/, '')]--;
-		this.manageUI.deleteCorpus(name);
-		this.metaSettingUI.deleteItems(name);
-		this.alignSettingUI.deleteItems(name);
-		this.titleSettingUI.deleteItems(name);
-		this.mainUI.deleteCorpus(name, {
-			metadata: this.metaSettingUI.target,
-			aligntype: this.alignSettingUI.target,
-			titleDisplay: this.titleSettingUI.target,
-		});
-	}
+    // console.log(event.target);
+    const item = event.target;
 
-	// * * * * * * * * * * * * * * * * interaction * * * * * * * * * * * * * * * * *
+    // delete
+    if(item.classList[0] === 'delete-btn')
+    {
+        // item.parentElement.remove();
+        // animation
+        item.parentElement.classList.add("fall");
 
-	// toggle aside
-	toggle() {
-		$('aside').toggleClass('open')
-	}
+        //removing local todos;
+        removeLocalTodos(item.parentElement);
 
-	// toggle visualization of a corpus
-	// name: string, name of toggled corpus
-	toggleCorpus(name) {
-		this.manageUI.toggleCorpus(name);
-		this.mainUI.toggleCorpus(name);
-	}
+        item.parentElement.addEventListener('transitionend', function(){
+            item.parentElement.remove();
+        })
+    }
 
-	// set a metadata active
-	// name: string, name of active metadata
-	activateMetadata(name) {
-		this.metaSettingUI.activateSetting(name);
-		this.mainUI.activateMetadata(name);
-	}
+    // check
+    if(item.classList[0] === 'check-btn')
+    {
+        item.parentElement.classList.toggle("completed");
+    }
 
-	// set an align type active
-	// name: string, name of active aligntype
-	activateAligntype(name) {
-		this.alignSettingUI.activateSetting(name);
-		this.mainUI.activateAligntype(name);
-	}
 
-	// set a title display metadata active
-	// name: string, name of active title display metadata
-	activateTitleDisplay(name) {
-		this.titleSettingUI.activateSetting(name);
-		this.mainUI.activateTitleDisplay(name);
-	}
 }
 
 
-// * * * * * * * * * * * * * * * * initialization * * * * * * * * * * * * * * * * *
+// Saving to local storage:
+function savelocal(todo){
+    //Check: if item/s are there;
+    let todos;
+    if(localStorage.getItem('todos') === null) {
+        todos = [];
+    }
+    else {
+        todos = JSON.parse(localStorage.getItem('todos'));
+    }
 
-
-// global variables
-var _ui = new UI();
-var _docusky = new DocuSky();		// docusky.js
-var _parser = new DocuxmlParser();	// docuxmlParser.js
-const _legalLang = { zh: 'zh', en: 'en' }
-let _lang = 'zh'
-
-// parse url parameter
-const { searchParams } = new URL(location.href)
-const _query = Object.fromEntries([...searchParams.entries()].map(
-	(([key, value]) => {
-		const parsedValue = key === 'corpus' ? value.split(',') : value
-		return [key, parsedValue]
-	})))
-
-
-// google analytics
-if (typeof gtagEventLog == 'function') {
-	gtagEventLog({
-		action: 'view',
-		category: 'tool',
-		label: '文本對讀工具'
-	});
+    todos.push(todo);
+    localStorage.setItem('todos', JSON.stringify(todos));
 }
 
 
-// initialize when browser is ready
-$(document).ready(function() {
 
-	// register
-	_docusky.addControlObj('login', new Login(openPublicDB, loginDocusky));									// ui-aside.js
-	_docusky.addControlObj('corpusList', new CorpusList(logoutDocusky, openLoginModal, switchDBList, getDataFromDocusky));	// ui-aside.js
-	
-	// explain text
-	$('#explain .modal-body').load('html/explain.html', function(argument) {
+function getTodos() {
+    //Check: if item/s are there;
+    let todos;
+    if(localStorage.getItem('todos') === null) {
+        todos = [];
+    }
+    else {
+        todos = JSON.parse(localStorage.getItem('todos'));
+    }
 
-		// jump
-		var jumpTo = function(key) {
-			var now = $('.explain-content').scrollTop();
-			var offset = $(`.explain-content [data-key="${ key }"]`).offset().top - $('.explain-content').offset().top;
+    todos.forEach(function(todo) {
+        // toDo DIV;
+        const toDoDiv = document.createElement("div");
+        toDoDiv.classList.add("todo", `${savedTheme}-todo`);
 
-			// animate
-			$('.explain-content').animate({
-				scrollTop: now + offset
-			}, 'fast');
-		};
-		
-		// onclick - directory
-		$('.explain-dir-item').click(function(event) {
-			jumpTo($(event.target).attr('data-key'));
-		});
+        // Create LI
+        const newToDo = document.createElement('li');
+        
+        newToDo.innerText = todo;
+        newToDo.classList.add('todo-item');
+        toDoDiv.appendChild(newToDo);
 
-		// onclick - link
-		$('.link').click(function(event) {
-			jumpTo($(event.target).attr('data-to'));
-		});
-	});
+        // check btn;
+        const checked = document.createElement('button');
+        checked.innerHTML = '<i class="fas fa-check"></i>';
+        checked.classList.add("check-btn", `${savedTheme}-button`);
+        toDoDiv.appendChild(checked);
+        // delete btn;
+        const deleted = document.createElement('button');
+        deleted.innerHTML = '<i class="fas fa-trash"></i>';
+        deleted.classList.add("delete-btn", `${savedTheme}-button`);
+        toDoDiv.appendChild(deleted);
 
-	// language
-	switchLanguage(_legalLang[_query['l']] || 'zh')
-
-	// auto load open db
-	if (_query.db) {
-		const target = _query.target || 'OPEN'
-		if (_query.corpus) {
-			_query.corpus.forEach(corpus => {
-				getDataFromDocusky({ target, db: _query.db, corpus })
-			})
-		} else {
-			_docusky.getDbCorpus(target, _query.db)
-		}
-	}
-});
-
-
-// * * * * * * * * * * * * * * * * events function * * * * * * * * * * * * * * * * *
-
-
-// menu button (left-up corner of screen) - toggle whole UI
-$('#menu').click(function() {
-	_ui.toggle();
-});
-
-
-// reset button (left-up corner of screen) - clear all colored align block
-$('#reset').click(function() {
-	_ui.mainUI.resetAlign();
-});
-
-
-// item title in side bar (left of screen) - toggle item content
-$('.control-item-title').click(function() {
-	$(this).next().slideToggle('fast');
-});
-
-
-// load from uploaded xml button (load data in side bar) - load data from user's computer
-$('#load-from-local').click(function() {
-	$('#upload-xml').click();
-});
-
-
-// upload files input (load data in side bar) - upload xml from user's computer
-$('#upload-xml').change(function() {
-	for (let i = 0; i < this.files.length; i++) getFileData(this.files[i]);
-	$(this).val('');
-});
-
-
-// load from docusky button (load data in side bar) - load data from docusky
-$('#load-from-docusky').click(function() {
-	_docusky.getDbCorpusList('USER');
-});
-
-
-// search button (search in side bar) - search query in corpora
-$('#search-btn').click(function() {
-	_ui.mainUI.search($('#search-query').val().trim());
-});
-
-
-// reset button (search in side bar) - clear all search result
-$('#search-reset').click(function() {
-	$('#search-query').val('');
-	_ui.mainUI.resetSearch();
-});
-
-
-// * * * * * * * * * * * * * * * * system function * * * * * * * * * * * * * * * * *
-
-
-// get data in uploaded file
-// file: File, object of uploaded file
-function getFileData(file) {
-	var reader = new FileReader();
-	reader.filename = file.name;
-	reader.onload = processDataFromXML;
-	reader.readAsText(file);
+        // Append to list;
+        toDoList.appendChild(toDoDiv);
+    });
 }
 
 
-// callback of get data from local
-// event: Event, file reader event
-function processDataFromXML(event) {
-	var data = _parser.processXMLRowData(event.target.result);
-	for (let name in data) {
-		if (Object.keys(_ui.corporaRecord).includes(name)) {
-			// has corpus already
-			alert(`文獻集「${name}」已存在。`)
-		} else {
-			_ui.addCorpus(name);
-			_ui.setCorpusData(name, data[name]);
-		}
-	}
+function removeLocalTodos(todo){
+    //Check: if item/s are there;
+    let todos;
+    if(localStorage.getItem('todos') === null) {
+        todos = [];
+    }
+    else {
+        todos = JSON.parse(localStorage.getItem('todos'));
+    }
+
+    const todoIndex =  todos.indexOf(todo.children[0].innerText);
+    // console.log(todoIndex);
+    todos.splice(todoIndex, 1);
+    // console.log(todos);
+    localStorage.setItem('todos', JSON.stringify(todos));
 }
 
+// Change theme function:
+function changeTheme(color) {
+    localStorage.setItem('savedTheme', color);
+    savedTheme = localStorage.getItem('savedTheme');
 
-// callback of submit login information
-// username: string, name of user account
-// password: string, password of user account
-function loginDocusky(username, password) {
-	_docusky.login(username, password);
-}
+    document.body.className = color;
+    // Change blinking cursor for darker theme:
+    color === 'darker' ? 
+        document.getElementById('title').classList.add('darker-title')
+        : document.getElementById('title').classList.remove('darker-title');
 
-
-// callback of submit logout
-function logoutDocusky() {
-	_docusky.logout()
-}
-
-function openLoginModal() {
-	_docusky.controlObj.corpusList.modal('hide')
-	_docusky.controlObj.login.modal('show')
-}
-
-
-// open corpus list of public database
-function openPublicDB() {
-	_docusky.getDbCorpusList('OPEN');
-}
-
-
-// switch database and corpus list to target
-// target: string, which database is loaded, OPEN or USER
-function switchDBList(target) {
-	_docusky.getDbCorpusList(target);
-}
-
-
-// callback of submit selected corpus
-// param: object, needed parameters when get data from api
-function getDataFromDocusky(param) {
-	if (Object.keys(_ui.corporaRecord).includes(param.corpus)) {
-		// has corpus already
-		alert(`文獻集「${param.corpus}」已存在。`)
-	} else {
-		param.callback = processDataFromDocusky;
-		_ui.addCorpus(param.corpus);
-		_docusky.getData(param);
-	}
-}
-
-
-// callback of get data from docusky
-// param: object, received data
-//	- db: string, name of database
-//	- corpus: string, name of corpus
-//	- docList: array(object), documents data from docusky
-//	- callback: function, execute after getting all data
-function processDataFromDocusky(param) {
-	var data = _parser.processDocuSkyRowData(param.docList);
-	_ui.setCorpusData(param.corpus, data);
+    document.querySelector('input').className = `${color}-input`;
+    // Change todo color without changing their status (completed or not):
+    document.querySelectorAll('.todo').forEach(todo => {
+        Array.from(todo.classList).some(item => item === 'completed') ? 
+            todo.className = `todo ${color}-todo completed`
+            : todo.className = `todo ${color}-todo`;
+    });
+    // Change buttons color according to their type (todo, check or delete):
+    document.querySelectorAll('button').forEach(button => {
+        Array.from(button.classList).some(item => {
+            if (item === 'check-btn') {
+              button.className = `check-btn ${color}-button`;  
+            } else if (item === 'delete-btn') {
+                button.className = `delete-btn ${color}-button`; 
+            } else if (item === 'todo-btn') {
+                button.className = `todo-btn ${color}-button`;
+            }
+        });
+    });
 }
